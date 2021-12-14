@@ -1,34 +1,25 @@
 #include <iostream>
 #include <string>
 using namespace std;
-#define BADNAME "Bad Billy"
-#define GOODNAME "Good Bod"
 
 class creature
 {
         string name;
-
+    
     protected:
         int estimatedLifespan;
 
     public:
-        creature(int);
-        void clone(int);
+        creature(int L);
         bool is_a_zombie();
-        void hit();
-        void heal();
+        void clone(int);
+        void beat();
+        void bless();
 };
 
-creature::creature(int L = 0)
+creature::creature(int L)
 {
     estimatedLifespan = L;
-    //is_bad = false;
-    // Give a place to society and a name
-}
-
-void creature::clone(int pos)
-{
-    // Destroy someone and clone your self to there place
 }
 
 bool creature::is_a_zombie()
@@ -38,29 +29,34 @@ bool creature::is_a_zombie()
     return true;
 }
 
-void creature::hit()
+void creature::clone(int creature)
 {
-    // Take 1 from his life (if not a zombie)
+    
 }
 
-void creature::heal()
+void creature::beat()
 {
-    // Give one to his life (if not a zombie)
+    estimatedLifespan--;
 }
 
+void creature::bless()
+{
+    estimatedLifespan++;
+}
 
 class good_creature : public creature
 {
     public:
-        void bless();
+        good_creature();
+        void bless(int, int, int);
         bool is_a_good();
-
 };
 
-void good_creature::bless()
+void good_creature::bless(int pos, int good_thrsh, int N)
 {
-    if (estimatedLifespan > 0)
-        clone(0);   // Change 0 with next position variable
+    creature::bless();
+    if (estimatedLifespan >= good_thrsh)
+        clone(pos + 1);
 }
 
 bool good_creature::is_a_good()
@@ -68,29 +64,26 @@ bool good_creature::is_a_good()
     return true;
 }
 
-
 class bad_creature : public creature
 {
     public:
-        void bless();
+        bad_creature();
+        void bless(int, int, int);
         bool is_a_good();
 };
 
-void bad_creature::bless()
+void bad_creature::bless(int pos, int bad_thrsh, int N)
 {
-    if (estimatedLifespan > 0)
+    creature::bless();
+    bool notAZombie = false;
+    int addToPos = 1;
+    while (!notAZombie)
     {
-        int pos;
-        // int pos = next_pos;
-        for (bool foundGood = false; foundGood != true; pos++)
-        {
-            // Check if next creature is good or bad
-            if (true)
-                foundGood = true;
-            else
-                //clone(pos);
-                clone(0);
-        }
+        if (!is_a_zombie)
+            notAZombie = true;
+        
+        clone(pos + addToPos);
+        addToPos++;
     }
 }
 
@@ -99,25 +92,118 @@ bool bad_creature::is_a_good()
     return false;
 }
 
+struct good_struct
+{
+    good_creature goodCreature;
+    int position;
+};
+
+struct bad_struct
+{
+    bad_creature badCreature;
+    int position;
+};
 
 class creature_society
 {
-        int numOfCreatures = 0;
-        creature* firstCreature;
-        creature* ArrayOfCreatures;
+        int creaturesOnSociety = 0, goodCreatures = 0, badCreatures = 0, N, good_thrsh, bad_thrsh;
+        string firstCreaturePosition;
+
+        good_struct* ArrayOfGoodCreatures;
+        bad_struct* ArrayOfBadCreatures;
 
     public:
-        creature_society(int);
+        creature_society(int, int, int);
+        void beat(int);
+        void bless(int);
 };
 
-creature_society::creature_society(int N)
+creature_society::creature_society(int N, int good_thrsh, int bad_thrsh)
 {
-    // ArrayOfCreatures = new creature[N];
-    // bool good_creature = false;
-    // for (int curCreature = 0; curCreature < N; curCreature++)
-    // {
-    //     int randomNum = ((double) rand() / (RAND_MAX)) + 1;
-    //     if (randomNum == 1)
-    //         good_creature = true;
-    // }
+    this->N = N;
+    this->good_thrsh = good_thrsh;
+    this->bad_thrsh = bad_thrsh;
+    good_struct* tempgood = new good_struct[N];
+    bad_struct* tempbad = new bad_struct[N];
+    
+    for (int curCreature = 0; curCreature < N; curCreature++)
+    {
+        srand(time(NULL));
+        int randNum = rand()%2;
+
+        if (randNum == 1)
+        {
+            good_creature good;
+            tempgood[curCreature].goodCreature = good;
+            tempgood[curCreature].position = curCreature;
+            goodCreatures++;
+
+            if (curCreature == 0)
+                firstCreaturePosition = "good";
+        }
+        else if (randNum == 2)
+        {
+            bad_creature bad;
+            tempbad[curCreature].badCreature = bad;
+            tempbad[curCreature].position = curCreature;
+            badCreatures++;
+
+            if (curCreature == 0)
+                firstCreaturePosition = "bad";
+        }
+    }
+
+    ArrayOfGoodCreatures = new good_struct[goodCreatures];
+    ArrayOfBadCreatures = new bad_struct[badCreatures];
+
+    for (int curCreature = 0; curCreature < N; curCreature++)
+    {
+        if (tempgood[curCreature].position == curCreature)
+        {
+            ArrayOfGoodCreatures[curCreature].goodCreature = tempgood[curCreature].goodCreature;
+            ArrayOfGoodCreatures[curCreature].position = tempgood[curCreature].position;
+        }
+        else if (tempbad[curCreature].position == curCreature)
+        {
+            ArrayOfBadCreatures[curCreature].badCreature = tempbad[curCreature].badCreature;
+            ArrayOfBadCreatures[curCreature].position = tempbad[curCreature].position;
+        }
+    }
+
+    delete [] tempgood;
+    delete [] tempbad;
 }
+
+void creature_society::beat(int i)
+{
+    for (int curCreature = 0; curCreature < N; curCreature++)
+    {
+        if (ArrayOfGoodCreatures[curCreature].position == i)
+        {
+            ArrayOfGoodCreatures[curCreature].goodCreature.beat();
+            curCreature = N;
+        }
+        else if (ArrayOfBadCreatures[curCreature].position == i)
+        {
+            ArrayOfBadCreatures[curCreature].badCreature.beat();
+            curCreature = N;
+        }
+    }
+}
+
+void creature_society::bless(int i)
+{
+    for (int curCreature = 0; curCreature < N; curCreature++)
+    {
+        if (ArrayOfGoodCreatures[curCreature].position == i)
+        {
+            ArrayOfGoodCreatures[curCreature].goodCreature.bless(curCreature, good_thrsh, N);
+            curCreature = N;
+        }
+        else if (ArrayOfBadCreatures[curCreature].position == i)
+        {
+            ArrayOfBadCreatures[curCreature].badCreature.bless(curCreature, bad_thrsh, N);
+            curCreature = N;
+        }
+    }
+}   
