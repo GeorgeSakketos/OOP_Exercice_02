@@ -12,7 +12,7 @@ class creature
     public:
         creature(int L);
         bool is_a_zombie();
-        void clone(int);
+        string* clone();
         void beat();
         void bless();
 };
@@ -29,9 +29,12 @@ bool creature::is_a_zombie()
     return true;
 }
 
-void creature::clone(int creature)
+string* creature::clone()
 {
-    
+    string* arrayOfStrings = new string[2];
+    arrayOfStrings[0] = name;
+    arrayOfStrings[1] = to_string(estimatedLifespan);
+    return arrayOfStrings;
 }
 
 void creature::beat()
@@ -55,8 +58,7 @@ class good_creature : public creature
 void good_creature::bless(int pos, int good_thrsh, int N)
 {
     creature::bless();
-    if (estimatedLifespan >= good_thrsh)
-        clone(pos + 1);
+    //
 }
 
 bool good_creature::is_a_good()
@@ -77,14 +79,14 @@ void bad_creature::bless(int pos, int bad_thrsh, int N)
     creature::bless();
     bool notAZombie = false;
     int addToPos = 1;
-    while (!notAZombie)
-    {
-        if (!is_a_zombie)
-            notAZombie = true;
+    // while (!notAZombie)
+    // {
+    //     if (!is_a_zombie)
+    //         notAZombie = true;
         
-        clone(pos + addToPos);
-        addToPos++;
-    }
+    //     clone(pos + addToPos);
+    //     addToPos++;
+    // }
 }
 
 bool bad_creature::is_a_good()
@@ -109,11 +111,13 @@ class creature_society
         int creaturesOnSociety = 0, goodCreatures = 0, badCreatures = 0, N, good_thrsh, bad_thrsh;
         string firstCreaturePosition;
 
+    public:
         good_struct* ArrayOfGoodCreatures;
         bad_struct* ArrayOfBadCreatures;
 
-    public:
         creature_society(int, int, int);
+        int find_good(int);
+        int find_bad(int);
         void beat(int);
         void bless(int);
 };
@@ -174,36 +178,44 @@ creature_society::creature_society(int N, int good_thrsh, int bad_thrsh)
     delete [] tempbad;
 }
 
+int creature_society::find_good(int i)
+{
+    for (int curCreature = 0; curCreature < goodCreatures; curCreature++)
+        if (ArrayOfGoodCreatures[curCreature].position == i)
+            return curCreature;
+    return NULL;
+}
+
+int creature_society::find_bad(int i)
+{
+    for (int curCreature = 0; curCreature < badCreatures; curCreature++)
+        if (ArrayOfBadCreatures[curCreature].position == i)
+            return curCreature;
+    return NULL;
+}
+
 void creature_society::beat(int i)
 {
-    for (int curCreature = 0; curCreature < N; curCreature++)
+    int pos = find_good(i);
+    if (pos != NULL)
+        ArrayOfGoodCreatures[pos].goodCreature.beat();
+    else
     {
-        if (ArrayOfGoodCreatures[curCreature].position == i)
-        {
-            ArrayOfGoodCreatures[curCreature].goodCreature.beat();
-            curCreature = N;
-        }
-        else if (ArrayOfBadCreatures[curCreature].position == i)
-        {
-            ArrayOfBadCreatures[curCreature].badCreature.beat();
-            curCreature = N;
-        }
+        pos = find_bad(i);
+        if (pos != NULL)
+            ArrayOfBadCreatures[pos].badCreature.beat();
     }
 }
 
 void creature_society::bless(int i)
 {
-    for (int curCreature = 0; curCreature < N; curCreature++)
+    int pos = find_good(i);
+    if (pos != NULL)
+        ArrayOfGoodCreatures[pos].goodCreature.bless(pos, good_thrsh, N);
+    else
     {
-        if (ArrayOfGoodCreatures[curCreature].position == i)
-        {
-            ArrayOfGoodCreatures[curCreature].goodCreature.bless(curCreature, good_thrsh, N);
-            curCreature = N;
-        }
-        else if (ArrayOfBadCreatures[curCreature].position == i)
-        {
-            ArrayOfBadCreatures[curCreature].badCreature.bless(curCreature, bad_thrsh, N);
-            curCreature = N;
-        }
-    }
+        pos = find_bad(i);
+        if (pos != NULL)
+            ArrayOfBadCreatures[pos].badCreature.bless(pos, bad_thrsh, N);
+    }   
 }   
