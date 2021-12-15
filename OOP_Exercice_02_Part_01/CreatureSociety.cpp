@@ -241,12 +241,12 @@ void creature_society::bless(int i)
             }
         }
     }
-    // else
-    // {
-    //     int curCreature = 0;
-    //     for (bool notAZombie = false; notAZombie != true; curCreature++)
-    //     {
+    else
+    {
+        int curCreature = 0;
+        // for (bool notAZombie = false; notAZombie != true; curCreature++)
+        // {
             
-    //     }
-    // }
+        // }
+    }
 }   
