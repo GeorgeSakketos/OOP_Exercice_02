@@ -3,13 +3,11 @@
 using namespace std;
 
 class creature
-{
+{   
+    public:
         string name;
-    
-    protected:
         int estimatedLifespan;
 
-    public:
         creature(int L);
         bool is_a_zombie();
         string* clone();
@@ -51,14 +49,16 @@ class good_creature : public creature
 {
     public:
         good_creature();
-        void bless(int, int, int);
+        string* bless(int, int);
         bool is_a_good();
 };
 
-void good_creature::bless(int pos, int good_thrsh, int N)
+string* good_creature::bless(int good_thrsh, int N)
 {
     creature::bless();
-    //
+    if (!is_a_zombie)
+        return clone();
+    return NULL;
 }
 
 bool good_creature::is_a_good()
@@ -70,23 +70,16 @@ class bad_creature : public creature
 {
     public:
         bad_creature();
-        void bless(int, int, int);
+        string* bless(int, int);
         bool is_a_good();
 };
 
-void bad_creature::bless(int pos, int bad_thrsh, int N)
+string* bad_creature::bless(int bad_thrsh, int N)
 {
     creature::bless();
-    bool notAZombie = false;
-    int addToPos = 1;
-    // while (!notAZombie)
-    // {
-    //     if (!is_a_zombie)
-    //         notAZombie = true;
-        
-    //     clone(pos + addToPos);
-    //     addToPos++;
-    // }
+    if (!is_a_zombie)
+        return clone();
+    return NULL;
 }
 
 bool bad_creature::is_a_good()
@@ -108,10 +101,11 @@ struct bad_struct
 
 class creature_society
 {
-        int creaturesOnSociety = 0, goodCreatures = 0, badCreatures = 0, N, good_thrsh, bad_thrsh;
+        int creaturesOnSociety = 0, N, good_thrsh, bad_thrsh;
         string firstCreaturePosition;
 
     public:
+        int goodCreatures = 0, badCreatures = 0;
         good_struct* ArrayOfGoodCreatures;
         bad_struct* ArrayOfBadCreatures;
 
@@ -210,12 +204,49 @@ void creature_society::beat(int i)
 void creature_society::bless(int i)
 {
     int pos = find_good(i);
+    bool is_a_good;
+    int next_pos = find_good(i + 1);
+    string* cloneInfo;
     if (pos != NULL)
-        ArrayOfGoodCreatures[pos].goodCreature.bless(pos, good_thrsh, N);
+    {
+        cloneInfo = ArrayOfGoodCreatures[pos].goodCreature.bless(good_thrsh, N);
+        is_a_good = ArrayOfGoodCreatures[pos].goodCreature.is_a_good();
+    }
     else
     {
         pos = find_bad(i);
         if (pos != NULL)
-            ArrayOfBadCreatures[pos].badCreature.bless(pos, bad_thrsh, N);
-    }   
+        {
+            cloneInfo = ArrayOfBadCreatures[pos].badCreature.bless(bad_thrsh, N);
+            is_a_good = ArrayOfBadCreatures[pos].badCreature.is_a_good();
+        }
+    }  
+
+    if (is_a_good)
+    {
+        if (next_pos != NULL)
+        {
+            ArrayOfGoodCreatures[next_pos].goodCreature.name = cloneInfo[0];
+            ArrayOfGoodCreatures[next_pos].goodCreature.estimatedLifespan = stoi(cloneInfo[1]);
+            delete [] cloneInfo;
+        } 
+        else
+        {
+            next_pos = find_bad(i + 1);
+            if (next_pos != NULL)
+            {
+                ArrayOfBadCreatures[next_pos].badCreature.name = cloneInfo[0];
+                ArrayOfBadCreatures[next_pos].badCreature.estimatedLifespan = stoi(cloneInfo[1]);
+                delete [] cloneInfo;
+            }
+        }
+    }
+    // else
+    // {
+    //     int curCreature = 0;
+    //     for (bool notAZombie = false; notAZombie != true; curCreature++)
+    //     {
+            
+    //     }
+    // }
 }   
