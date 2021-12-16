@@ -15,12 +15,13 @@ class creature
     public:
         creature(int, string);
         bool is_a_zombie();
+        virtual bool is_a_good();
         void clone(int);
         void beat();
-        virtual void bless();
+        virtual void bless(int, int, int);
 };
 
-creature::creature(int L = 0, string type = "NONE")
+creature::creature(int L, string type)
 {
     estimatedLifespan = L;
     if (type == "good")
@@ -50,7 +51,7 @@ void creature::beat()
         estimatedLifespan--;
 }
 
-void creature::bless()
+void creature::bless(int N, int creature_pos, int thrsh)
 {
     if (!is_a_zombie())
         estimatedLifespan++;
@@ -59,13 +60,14 @@ void creature::bless()
 class good_creature : public creature
 {
     public:
+        good_creature();
         void bless(int, int, int);
         bool is_a_good();
 };
 
 void good_creature::bless(int N, int creature_pos, int good_thrsh)
 {
-    creature::bless();
+    creature::bless(N, creature_pos, good_thrsh);
     if (estimatedLifespan >= good_thrsh)
     {
         if (creature_pos + 1 >= N)
@@ -83,13 +85,14 @@ bool good_creature::is_a_good()
 class bad_creature : public creature
 {
     public:
+        bad_creature();
         void bless(int, int, int);
         bool is_a_good();
 };
 
 void bad_creature::bless(int N, int creature_pos, int bad_thrsh)
 {
-    creature::bless();
+    creature::bless(N, creature_pos, bad_thrsh);
     if (estimatedLifespan >= bad_thrsh)
     {
         if (++creature_pos < N)
@@ -116,21 +119,27 @@ bool bad_creature::is_a_good()
     return false;
 }
 
+struct creatureInfo
+{
+    creature* Creature;
+    int index;
+};
+
 class creature_society
 {
         int creaturesOnSociety;
         creature* firstCreature;
+        creatureInfo* ArrayOfCreatures;
 
     public:
-        creature* ArrayOfCreatures;
         creature_society(int);
 };
 
 creature_society::creature_society(int N)
 {
     creaturesOnSociety = 0;
-    this->ArrayOfCreatures = new creature[N];
-    
+    ArrayOfCreatures = new creatureInfo[N];
+
     for (int curCreature = 0; curCreature < N; curCreature++)
     {
         srand(time(NULL));
@@ -139,12 +148,12 @@ creature_society::creature_society(int N)
         if (randNum == 0)
         {
             bad_creature bad;
-            this->ArrayOfCreatures[curCreature] = bad;
+            ArrayOfCreatures[curCreature].Creature = &bad;
         }
-        else if (randNum == 1)
+        else
         {
             good_creature good;
-            this->ArrayOfCreatures[curCreature] = good;
+            ArrayOfCreatures[curCreature].Creature = &good;
         }
     }
 }
